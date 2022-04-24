@@ -47,7 +47,11 @@ public class BasicRemoteConfigs {
 			return // TODO: throw error
 		}
 
-		handleNewConfigs(configs: newValues)
+		let newVersion = newValues[versionKey] as? Int ?? noneVersion
+		guard newVersion != version || newVersion == noneVersion else { return }
+		
+		values = newValues
+		version = newVersion
 	}
 	
 	private func fetchRemoteConfigs() async throws {
@@ -57,16 +61,12 @@ public class BasicRemoteConfigs {
 			return // TODO: throw error
 		}
 		
-		fetchDate = Date()
-		handleNewConfigs(configs: newValues)
-	}
-	
-	private func handleNewConfigs(configs: [String: Any]) {
-		let newVersion = configs[versionKey] as? Int ?? noneVersion
-		
+		let newVersion = newValues[versionKey] as? Int ?? noneVersion
 		guard newVersion != version || newVersion == noneVersion else { return }
 		
-		values = configs
+		values = newValues
 		version = newVersion
+		fetchDate = Date()
+		try await cacheHelper.setCacheConfigs(configs: newValues)
 	}
 }

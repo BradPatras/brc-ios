@@ -27,7 +27,7 @@ struct CacheHelper {
 		let attributes = try fileManager.attributesOfItem(atPath: cacheURL.path)
 		return (attributes[.modificationDate] ?? attributes[.creationDate]) as? Date
 	}
-	
+
 	func isCacheValid(expirationHours: Int) -> Bool {
 		guard let lastModified = try? getLastModified(),
 			  let cachePath = getCacheFileURL()?.path
