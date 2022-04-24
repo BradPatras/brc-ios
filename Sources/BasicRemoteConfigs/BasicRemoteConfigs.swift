@@ -3,10 +3,11 @@ import Foundation
 private let noneVersion = -1
 private let versionKey = "ver"
 private let cacheFilename = "brc_cache"
-private let cacheExpirationDays = 1
+private let cacheExpirationHours = 24
 
-public struct BasicRemoteConfigs {
+public class BasicRemoteConfigs {
 	private let remoteURL: URL
+	private let cacheHelper: CacheHelper
 	
 	/// Dictionary containing the config values.
 	public private(set) var values: [String: Any] = [:]
@@ -18,19 +19,54 @@ public struct BasicRemoteConfigs {
 	/// A Date representing the last time the configs were successfully fetched and updated.
 	public private(set) var fetchDate: Date? = nil
 	
-	public init(remoteURL: URL) {
+	public convenience init(remoteURL: URL) {
+		self.init(
+			remoteURL: remoteURL,
+			cacheHelper: CacheHelper(cacheFilename: cacheFilename, fileManager: FileManager.default)
+		)
+	}
+	
+	internal init(
+		remoteURL: URL,
+		cacheHelper: CacheHelper
+	) {
 		self.remoteURL = remoteURL
+		self.cacheHelper = cacheHelper
 	}
 	
-	public func fetchConfigs(ignoreCache: Bool = false) async {
-		
+	public func fetchConfigs(ignoreCache: Bool = false) async throws {
+		if cacheHelper.isCacheValid(expirationHours: cacheExpirationHours) {
+			try await fetchLocalConfigs()
+		} else {
+			try await fetchRemoteConfigs()
+		}
 	}
 	
-	private func fetchLocalConfigs() async {
-		
+	private func fetchLocalConfigs() async throws {
+		guard let newValues = try cacheHelper.getCacheConfigs() else {
+			return // TODO: throw error
+		}
+
+		handleNewConfigs(configs: newValues)
 	}
 	
-	private func fetchRemoteConfigs() async {
+	private func fetchRemoteConfigs() async throws {
+		let (data, _) = try await URLSession.shared.data(from: remoteURL)
 		
+		guard let newValues = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+			return // TODO: throw error
+		}
+		
+		fetchDate = Date()
+		handleNewConfigs(configs: newValues)
+	}
+	
+	private func handleNewConfigs(configs: [String: Any]) {
+		let newVersion = configs[versionKey] as? Int ?? noneVersion
+		
+		guard newVersion != version || newVersion == noneVersion else { return }
+		
+		values = configs
+		version = newVersion
 	}
 }
