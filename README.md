@@ -12,13 +12,6 @@ Either add it via `File -> Add Package` or in your `Package.swift` file, add the
 // TODO
 ```
 
-In your app or module `build.gradle` file, add the `brc-android` dependency:
-```gradle
-dependencies {
-    implementation 'io.github.bradpatras:brc-android:0.2.0'
-}
-```
-
 ## Usage
 The usage is pretty straightforward:
 1. Create an instance of BasicRemoteConfigs
