@@ -1,6 +1,5 @@
 import Foundation
 
-
 enum CacheHelperError: LocalizedError {
 	case cacheFileURLError
 	
@@ -14,56 +13,80 @@ enum CacheHelperError: LocalizedError {
 		}
 	}
 }
-
 struct CacheHelper {
-	private let cacheFilename: String
-	private let fileManager: FileManager
-
-	init(cacheFilename: String, fileManager: FileManager) {
-		self.cacheFilename = cacheFilename
-		self.fileManager = fileManager
-	}
-
-	func setCacheConfigs(configs: [String: Any]) async throws {
-		let cacheURL = try getCacheFileURL()
-		let data = try JSONSerialization.data(withJSONObject: configs)
-		try data.write(to: cacheURL)
+	private let setCacheConfigsClosure: ([String: Any]) throws -> Void
+	
+	private let getCacheConfigsClosure: () throws -> [String: Any]?
+	
+	private let getLastModifiedClosure: () throws -> Date?
+	
+	private let isCacheValidClosure: (Int) -> Bool
+	
+	func setCacheConfigs(_ configs: [String: Any]) throws -> Void {
+		try setCacheConfigsClosure(configs)
 	}
 	
 	func getCacheConfigs() throws -> [String: Any]? {
-		let cacheData = try getCacheFileData()
-		return try JSONSerialization.jsonObject(with: cacheData) as? [String: Any]
+		try getCacheConfigsClosure()
 	}
 	
-	func clearCache() {
-		let cacheURL = try? getCacheFileURL()
-		try? fileManager.removeItem(atPath: cacheURL.path)
-	}
-
 	func getLastModified() throws -> Date? {
-		let cacheURL = try getCacheFileURL()
-		
-		let attributes = try fileManager.attributesOfItem(atPath: cacheURL.path)
-		return (attributes[.modificationDate] ?? attributes[.creationDate]) as? Date
-	}
-
-	func isCacheValid(expirationHours: Int) -> Bool {
-		guard let lastModified = try? getLastModified(),
-			  let cachePath = try? getCacheFileURL().path
-		else { return false }
-
-		let fileExists = fileManager.fileExists(atPath: cachePath)
-		let fileNotExpired = Date().isBefore(date: lastModified.adding(hours: expirationHours))
-		
-		return fileNotExpired && fileExists
+		try getLastModifiedClosure()
 	}
 	
-	private func getCacheFileData() throws -> Data? {
-		let cacheURL = try getCacheFileURL()
+	func isCacheValid(expirationHours: Int) -> Bool {
+		isCacheValidClosure(expirationHours)
+	}
+}
+
+extension CacheHelper {
+	static var unimplemented: CacheHelper {
+		return CacheHelper(
+			setCacheConfigsClosure: { _ in },
+			getCacheConfigsClosure: { nil },
+			getLastModifiedClosure: { nil },
+			isCacheValidClosure: { _ in false }
+		)
+	}
+	
+	static func live(cacheFilename: String, fileManager: FileManager) -> CacheHelper {
+		let getLastModified: () throws -> Date? = {
+			let cacheURL = try getCacheFileURL(cacheFilename: cacheFilename, fileManager: fileManager)
+			
+			let attributes = try fileManager.attributesOfItem(atPath: cacheURL.path)
+			return (attributes[.modificationDate] ?? attributes[.creationDate]) as? Date
+		}
+		
+		return .init(
+			setCacheConfigsClosure: { configs in
+				let cacheURL = try getCacheFileURL(cacheFilename: cacheFilename, fileManager: fileManager)
+				let data = try JSONSerialization.data(withJSONObject: configs)
+				try data.write(to: cacheURL)
+			},
+			getCacheConfigsClosure: {
+				guard let cacheData = try getCacheFileData(cacheFilename: cacheFilename, fileManager: fileManager) else { return nil }
+				return try JSONSerialization.jsonObject(with: cacheData) as? [String: Any]
+			},
+			getLastModifiedClosure: getLastModified,
+			isCacheValidClosure: { expirationHours -> Bool in
+				guard let lastModified = try? getLastModified(),
+					  let cachePath = try? getCacheFileURL(cacheFilename: cacheFilename, fileManager: fileManager).path
+				else { return false }
+
+				let fileExists = fileManager.fileExists(atPath: cachePath)
+				let fileNotExpired = Date().isBefore(date: lastModified.adding(hours: expirationHours))
+				
+				return fileNotExpired && fileExists
+			}
+		)
+	}
+
+	private static func getCacheFileData(cacheFilename: String, fileManager: FileManager) throws -> Data? {
+		let cacheURL = try getCacheFileURL(cacheFilename: cacheFilename, fileManager: fileManager)
 		return fileManager.contents(atPath: cacheURL.path)
 	}
 	
-	private func getCacheFileURL() throws -> URL {
+	private static func getCacheFileURL(cacheFilename: String, fileManager: FileManager) throws -> URL {
 		guard let deviceCacheURL = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first
 		else { throw CacheHelperError.cacheFileURLError }
 		

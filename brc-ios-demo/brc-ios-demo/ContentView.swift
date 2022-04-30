@@ -14,11 +14,15 @@ struct ContentView: View {
 	
     var body: some View {
 		VStack {
+			Spacer()
+			
 			Text(text)
 				.padding()
 				.font(.caption)
 			
 			Button(action: {
+				text = "Fetching configs..."
+				
 				Task {
 					do {
 						try await brc.fetchConfigs()
@@ -30,6 +34,12 @@ struct ContentView: View {
 			}) {
 				Text("Fetch configs")
 			}
+			
+			Spacer()
+			
+			ProgressView()
+			
+			Spacer()
 		}
     }
 }

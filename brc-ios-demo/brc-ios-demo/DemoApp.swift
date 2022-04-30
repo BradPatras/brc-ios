@@ -10,7 +10,12 @@ import SwiftUI
 
 @main
 struct DemoApp: App {
-	let brc = BasicRemoteConfigs(remoteURL: URL(string: "https://github.com/BradPatras/basic-remote-configs/raw/main/examples/simple.json")!)
+	let brc = BasicRemoteConfigs.live(
+		remoteURL: URL(
+			string: "https://github.com/BradPatras/basic-remote-configs/raw/main/examples/simple.json"
+		)!
+	)
+	
     var body: some Scene {
         WindowGroup {
             ContentView(brc: brc)

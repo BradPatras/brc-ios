@@ -28,6 +28,7 @@ public enum BasicRemoteConfigsError: LocalizedError {
 public class BasicRemoteConfigs {
 	private let remoteURL: URL
 	private let cacheHelper: CacheHelper
+	private let requestHelper: NetworkRequestHelper
 	
 	/// Dictionary containing the config values.
 	public private(set) var values: [String: Any] = [:]
@@ -39,30 +40,29 @@ public class BasicRemoteConfigs {
 	/// A Date representing the last time the configs were successfully fetched and updated.
 	public private(set) var fetchDate: Date? = nil
 	
-	public convenience init(remoteURL: URL) {
-		self.init(
-			remoteURL: remoteURL,
-			cacheHelper: CacheHelper(cacheFilename: cacheFilename, fileManager: FileManager.default)
-		)
-	}
-	
-	internal init(
+	private init(
 		remoteURL: URL,
-		cacheHelper: CacheHelper
+		cacheHelper: CacheHelper,
+		requestHelper: NetworkRequestHelper
 	) {
 		self.remoteURL = remoteURL
 		self.cacheHelper = cacheHelper
+		self.requestHelper = requestHelper
 	}
-	
+
 	public func fetchConfigs(ignoreCache: Bool = false) async throws {
 		if cacheHelper.isCacheValid(expirationHours: cacheExpirationHours) {
-			try await fetchLocalConfigs()
+			try fetchLocalConfigs()
 		} else {
-			try await fetchRemoteConfigs()
+			do {
+				try await fetchRemoteConfigs()
+			} catch {
+				try fetchLocalConfigs()
+			}
 		}
 	}
 	
-	private func fetchLocalConfigs() async throws {
+	private func fetchLocalConfigs() throws {
 		guard let newValues = try cacheHelper.getCacheConfigs() else {
 			throw BasicRemoteConfigsError.failedToFetchLocalConfigs
 		}
@@ -87,6 +87,27 @@ public class BasicRemoteConfigs {
 		values = newValues
 		version = newVersion
 		fetchDate = Date()
-		try await cacheHelper.setCacheConfigs(configs: newValues)
+		try cacheHelper.setCacheConfigs(newValues)
+	}
+}
+
+extension BasicRemoteConfigs {
+	public static func live(remoteURL: URL) -> BasicRemoteConfigs {
+		return .init(
+			remoteURL: remoteURL,
+			cacheHelper: .live(cacheFilename: cacheFilename, fileManager: FileManager.default),
+			requestHelper: .live
+		)
+	}
+	
+	public static var unimplemented: BasicRemoteConfigs {
+		return BasicRemoteConfigs(remoteURL: URL(fileURLWithPath: ""), cacheHelper: .unimplemented, requestHelper: .unimplemented)
+	}
+	
+	public static func mocked(configs: [String: Any]) -> BasicRemoteConfigs {
+		let brc = BasicRemoteConfigs(remoteURL: URL(fileURLWithPath: ""), cacheHelper: .unimplemented, requestHelper: .unimplemented)
+		brc.values = configs
+		
+		return brc
 	}
 }
