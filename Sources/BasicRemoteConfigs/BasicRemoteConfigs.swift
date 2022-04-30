@@ -5,6 +5,26 @@ private let versionKey = "ver"
 private let cacheFilename = "brc_cache"
 private let cacheExpirationHours = 24
 
+public enum BasicRemoteConfigsError: LocalizedError {
+	case failedToFetchLocalConfigs
+	case failedToDeserializeConfigs
+	
+	public var errorDescription: String? {
+		switch self {
+		case .failedToDeserializeConfigs:
+			return NSLocalizedString(
+				"Failed to deserialize config data",
+				comment: "Error message for when config data deserialization failed"
+			)
+		case .failedToFetchLocalConfigs:
+			return NSLocalizedString(
+				"Failed to fetch local configs",
+				comment: "Error message for when local config fetch failed"
+			)
+		}
+	}
+}
+
 public class BasicRemoteConfigs {
 	private let remoteURL: URL
 	private let cacheHelper: CacheHelper
@@ -44,7 +64,7 @@ public class BasicRemoteConfigs {
 	
 	private func fetchLocalConfigs() async throws {
 		guard let newValues = try cacheHelper.getCacheConfigs() else {
-			return // TODO: throw error
+			throw BasicRemoteConfigsError.failedToFetchLocalConfigs
 		}
 
 		let newVersion = newValues[versionKey] as? Int ?? noneVersion
@@ -58,7 +78,7 @@ public class BasicRemoteConfigs {
 		let (data, _) = try await URLSession.shared.data(from: remoteURL)
 		
 		guard let newValues = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-			return // TODO: throw error
+			throw BasicRemoteConfigsError.failedToDeserializeConfigs
 		}
 		
 		let newVersion = newValues[versionKey] as? Int ?? noneVersion
