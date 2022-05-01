@@ -75,7 +75,7 @@ public class BasicRemoteConfigs {
 	}
 	
 	private func fetchRemoteConfigs() async throws {
-		let (data, _) = try await URLSession.shared.data(from: remoteURL)
+		let data = try await requestHelper.makeRequest(url: remoteURL) ?? Data()
 		
 		guard let newValues = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
 			throw BasicRemoteConfigsError.failedToDeserializeConfigs
@@ -104,9 +104,13 @@ extension BasicRemoteConfigs {
 		return BasicRemoteConfigs(remoteURL: URL(fileURLWithPath: ""), cacheHelper: .unimplemented, requestHelper: .unimplemented)
 	}
 	
-	public static func mocked(configs: [String: Any]) -> BasicRemoteConfigs {
-		let brc = BasicRemoteConfigs(remoteURL: URL(fileURLWithPath: ""), cacheHelper: .unimplemented, requestHelper: .unimplemented)
-		brc.values = configs
+	public static func mocked(configs: [String: Any]) throws -> BasicRemoteConfigs {
+		let data = try JSONSerialization.data(withJSONObject: configs)
+		let brc = BasicRemoteConfigs(
+			remoteURL: URL(fileURLWithPath: ""),
+			cacheHelper: .unimplemented,
+			requestHelper: .mocked(response: data)
+		)
 		
 		return brc
 	}
