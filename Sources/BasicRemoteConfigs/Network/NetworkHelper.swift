@@ -21,4 +21,10 @@ extension NetworkRequestHelper {
 	static var unimplemented: NetworkRequestHelper {
 		return .init { _ in nil }
 	}
+	
+	static func mocked(response: Data) -> NetworkRequestHelper {
+		return .init { _ in
+			return response
+		}
+	}
 }

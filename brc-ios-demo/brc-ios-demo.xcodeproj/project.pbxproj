@@ -21,6 +21,7 @@
 		5C3FA18D2815FC2D00F4B252 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5C3FA1902815FC2D00F4B252 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		5C3FA1992815FCCD00F4B252 /* brc-ios */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "brc-ios"; path = ..; sourceTree = "<group>"; };
+		5C63B4822883704A00EA63F0 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -38,6 +39,7 @@
 		5C3FA17D2815FC2200F4B252 = {
 			isa = PBXGroup;
 			children = (
+				5C63B4822883704A00EA63F0 /* Package.swift */,
 				5C3FA1972815FC9000F4B252 /* Packages */,
 				5C3FA1882815FC2200F4B252 /* brc-ios-demo */,
 				5C3FA1872815FC2200F4B252 /* Products */,

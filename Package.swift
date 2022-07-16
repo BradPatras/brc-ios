@@ -13,9 +13,11 @@ let package = Package(
 	targets: [
 		.target(
 			name: "BasicRemoteConfigs",
-			dependencies: []),
+			dependencies: []
+		),
 		.testTarget(
 			name: "BasicRemoteConfigsTests",
-			dependencies: ["BasicRemoteConfigs"]),
+			dependencies: ["BasicRemoteConfigs"]
+		),
 	]
 )
