@@ -1,4 +1,4 @@
-![spm version](https://img.shields.io/badge/Swift%20Package%20Manager-0.1.0-blue)
+[![spm version](https://img.shields.io/badge/Swift%20Package%20Manager-0.1.0-blue)](https://github.com/BradPatras/brc-ios/releases)
 
 # brc-ios
 Bare-bones remote configs for iOS.  Check out the [basic-remote-configs](https://github.com/BradPatras/basic-remote-configs) project repo for more context.
