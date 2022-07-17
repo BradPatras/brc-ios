@@ -27,6 +27,7 @@ public enum BasicRemoteConfigsError: LocalizedError {
 
 public class BasicRemoteConfigs {
 	private let remoteURL: URL
+	private let customHeaders: [String: String]
 	private let cacheHelper: CacheHelper
 	private let requestHelper: NetworkRequestHelper
 
@@ -42,10 +43,12 @@ public class BasicRemoteConfigs {
 
 	private init(
 		remoteURL: URL,
+		customHeaders: [String: String],
 		cacheHelper: CacheHelper,
 		requestHelper: NetworkRequestHelper
 	) {
 		self.remoteURL = remoteURL
+		self.customHeaders = customHeaders
 		self.cacheHelper = cacheHelper
 		self.requestHelper = requestHelper
 	}
@@ -94,7 +97,10 @@ public class BasicRemoteConfigs {
 	}
 
 	private func fetchRemoteConfigs() async throws {
-		let data = try await requestHelper.makeRequest(url: remoteURL) ?? Data()
+		let data = try await requestHelper.makeRequest(
+			url: remoteURL,
+			customHeaders: customHeaders
+		) ?? Data()
 		
 		guard let newValues = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
 			throw BasicRemoteConfigsError.failedToDeserializeConfigs
@@ -111,22 +117,34 @@ public class BasicRemoteConfigs {
 }
 
 extension BasicRemoteConfigs {
-	public static func live(remoteURL: URL) -> BasicRemoteConfigs {
+	/// Initialize and return an instance of BsicRemoteConfigs
+	/// - Parameters:
+	///   - remoteURL: URL to use for fetching remote configs
+	///   - customHeaders: Additional headers to include in fetch request
+	/// - Returns: BasicRemoteConfigs instance
+	public static func live(remoteURL: URL, customHeaders: [String: String] = [:]) -> BasicRemoteConfigs {
 		return .init(
 			remoteURL: remoteURL,
+			customHeaders: customHeaders,
 			cacheHelper: .live(cacheFilename: cacheFilename, fileManager: FileManager.default),
 			requestHelper: .live
 		)
 	}
 
 	public static var unimplemented: BasicRemoteConfigs {
-		return BasicRemoteConfigs(remoteURL: URL(fileURLWithPath: ""), cacheHelper: .unimplemented, requestHelper: .unimplemented)
+		return BasicRemoteConfigs(
+			remoteURL: URL(fileURLWithPath: ""),
+			customHeaders: [:],
+			cacheHelper: .unimplemented,
+			requestHelper: .unimplemented
+		)
 	}
 
 	public static func mocked(configs: [String: Any]) throws -> BasicRemoteConfigs {
 		let data = try JSONSerialization.data(withJSONObject: configs)
 		let brc = BasicRemoteConfigs(
 			remoteURL: URL(fileURLWithPath: ""),
+			customHeaders: [:],
 			cacheHelper: .unimplemented,
 			requestHelper: .mocked(response: data)
 		)
