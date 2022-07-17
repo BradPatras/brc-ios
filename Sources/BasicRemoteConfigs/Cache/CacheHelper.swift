@@ -13,6 +13,7 @@ enum CacheHelperError: LocalizedError {
 		}
 	}
 }
+
 struct CacheHelper {
 	private let setCacheConfigsClosure: ([String: Any]) throws -> Void
 	
@@ -72,7 +73,7 @@ extension CacheHelper {
 				guard let lastModified = try? getLastModified(),
 					  let cachePath = try? getCacheFileURL(cacheFilename: cacheFilename, fileManager: fileManager).path
 				else { return false }
-
+				
 				let fileExists = fileManager.fileExists(atPath: cachePath)
 				let fileNotExpired = Date().isBefore(date: lastModified.adding(hours: expirationHours))
 				
@@ -80,7 +81,7 @@ extension CacheHelper {
 			}
 		)
 	}
-
+	
 	private static func getCacheFileData(cacheFilename: String, fileManager: FileManager) throws -> Data? {
 		let cacheURL = try getCacheFileURL(cacheFilename: cacheFilename, fileManager: fileManager)
 		return fileManager.contents(atPath: cacheURL.path)

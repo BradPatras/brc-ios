@@ -8,7 +8,7 @@ private let cacheExpirationHours = 24
 public enum BasicRemoteConfigsError: LocalizedError {
 	case failedToFetchLocalConfigs
 	case failedToDeserializeConfigs
-	
+
 	public var errorDescription: String? {
 		switch self {
 		case .failedToDeserializeConfigs:
@@ -29,17 +29,17 @@ public class BasicRemoteConfigs {
 	private let remoteURL: URL
 	private let cacheHelper: CacheHelper
 	private let requestHelper: NetworkRequestHelper
-	
+
 	/// Dictionary containing the config values.
 	public private(set) var values: [String: Any] = [:]
-	
+
 	/// Version parsed from the fetched configs.  If configs haven't been fetched or
 	/// there was no version key included, the version will default to *-1*.
 	public private(set) var version: Int = noneVersion
-	
+
 	/// A Date representing the last time the configs were successfully fetched and updated.
 	public private(set) var fetchDate: Date? = nil
-	
+
 	private init(
 		remoteURL: URL,
 		cacheHelper: CacheHelper,
@@ -73,7 +73,7 @@ public class BasicRemoteConfigs {
 		values = newValues
 		version = newVersion
 	}
-	
+
 	private func fetchRemoteConfigs() async throws {
 		let data = try await requestHelper.makeRequest(url: remoteURL) ?? Data()
 		
@@ -99,11 +99,11 @@ extension BasicRemoteConfigs {
 			requestHelper: .live
 		)
 	}
-	
+
 	public static var unimplemented: BasicRemoteConfigs {
 		return BasicRemoteConfigs(remoteURL: URL(fileURLWithPath: ""), cacheHelper: .unimplemented, requestHelper: .unimplemented)
 	}
-	
+
 	public static func mocked(configs: [String: Any]) throws -> BasicRemoteConfigs {
 		let data = try JSONSerialization.data(withJSONObject: configs)
 		let brc = BasicRemoteConfigs(
@@ -111,7 +111,7 @@ extension BasicRemoteConfigs {
 			cacheHelper: .unimplemented,
 			requestHelper: .mocked(response: data)
 		)
-		
+
 		return brc
 	}
 }
