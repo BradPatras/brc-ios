@@ -7,9 +7,9 @@ Bare-bones remote configs for iOS.  Check out the [basic-remote-configs](https:/
 
 
 ### Swift Package Manager:
-Either add it via `File -> Add Package` or in your `Package.swift` file, add the dependency:
+Either add it via `File -> Add Package` or in your `Package.swift` file:
 ```swift
-// TODO
+https://github.com/BradPatras/brc-ios
 ```
 
 ## Usage
