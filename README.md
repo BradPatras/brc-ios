@@ -5,7 +5,6 @@ Bare-bones remote configs for iOS.  Check out the [basic-remote-configs](https:/
 
 🚧 &nbsp; Under active development &nbsp; 🚧
 
-
 ### Swift Package Manager:
 Either add it via `File -> Add Package` or in your `Package.swift` file:
 ```swift
@@ -24,8 +23,8 @@ let configUrl = URL(string: "https://github.com/BradPatras/basic-remote-configs/
 let brc = BasicRemoteConfigs(configURL: configUrl)
 
 // ...
-await brc.fetchConfigs()
-let someFlag = brc.getBoolean("someFlag") // #3
+try await brc.fetchConfigs() // #2
+let someFlag = brc.values["someFlag"] as? Bool // #3
 ```
 
 ## Caching
@@ -34,7 +33,10 @@ Configs are stored locally in the app's private storage once they've been fetche
 2. The call to fetch configs from the network failed for any reason.
 
 
-If you'd like to bypass the cached version and fetch the latest configs from the network, there's an optional param available `.fetchConfigs(ignoreCache: Boolean)`
+If you'd like to bypass the cached version and fetch the latest configs from the network, there's an optional param available.
+```swift
+brc.fetchConfigs(ignoreCache: Boolean)
+```
 
 ## Error handling
 The call to `.fetchConfigs()` may make a network request and do some deserialization, so it's bound to fail at some point. BasicRemoteConfigs will print errors under the key "BasicRemoteConfigs" using `Log.e` with a hint as to where the error happened in regards to fetching configs. It won't do any handling or masking of the exceptions so you need to wrap it in a try/catch or use a CoroutineExceptionHandler yourself.
