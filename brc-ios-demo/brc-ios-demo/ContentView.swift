@@ -36,10 +36,6 @@ struct ContentView: View {
 			}
 			
 			Spacer()
-			
-			ProgressView()
-			
-			Spacer()
 		}
     }
 }
