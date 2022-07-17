@@ -16,17 +16,19 @@ enum CacheHelperError: LocalizedError {
 
 struct CacheHelper {
 	private let setCacheConfigsClosure: ([String: Any]) throws -> Void
-	
+
 	private let getCacheConfigsClosure: () throws -> [String: Any]?
-	
+
 	private let getLastModifiedClosure: () throws -> Date?
-	
+
 	private let isCacheValidClosure: (Int) -> Bool
+
+	private let deleteCacheClosure: () throws -> Void
 	
-	func setCacheConfigs(_ configs: [String: Any]) throws -> Void {
+	func setCacheConfigs(_ configs: [String: Any]) throws {
 		try setCacheConfigsClosure(configs)
 	}
-	
+
 	func getCacheConfigs() throws -> [String: Any]? {
 		try getCacheConfigsClosure()
 	}
@@ -38,6 +40,10 @@ struct CacheHelper {
 	func isCacheValid(expirationHours: Int) -> Bool {
 		isCacheValidClosure(expirationHours)
 	}
+
+	func deleteCache() throws {
+		try deleteCacheClosure()
+	}
 }
 
 extension CacheHelper {
@@ -46,12 +52,13 @@ extension CacheHelper {
 			setCacheConfigsClosure: { _ in },
 			getCacheConfigsClosure: { nil },
 			getLastModifiedClosure: { nil },
-			isCacheValidClosure: { _ in false }
+			isCacheValidClosure: { _ in false },
+			deleteCacheClosure: { }
 		)
 	}
 	
 	static func live(cacheFilename: String, fileManager: FileManager) -> CacheHelper {
-		let getLastModified: () throws -> Date? = {
+		func getLastModified() throws -> Date? {
 			let cacheURL = try getCacheFileURL(cacheFilename: cacheFilename, fileManager: fileManager)
 			
 			let attributes = try fileManager.attributesOfItem(atPath: cacheURL.path)
@@ -73,15 +80,21 @@ extension CacheHelper {
 				guard let lastModified = try? getLastModified(),
 					  let cachePath = try? getCacheFileURL(cacheFilename: cacheFilename, fileManager: fileManager).path
 				else { return false }
-				
+
 				let fileExists = fileManager.fileExists(atPath: cachePath)
 				let fileNotExpired = Date().isBefore(date: lastModified.adding(hours: expirationHours))
 				
 				return fileNotExpired && fileExists
+			},
+			deleteCacheClosure: {
+				guard let cachePath = try? getCacheFileURL(cacheFilename: cacheFilename, fileManager: fileManager).path
+				else { return }
+
+				try fileManager.removeItem(atPath: cachePath)
 			}
 		)
 	}
-	
+
 	private static func getCacheFileData(cacheFilename: String, fileManager: FileManager) throws -> Data? {
 		let cacheURL = try getCacheFileURL(cacheFilename: cacheFilename, fileManager: fileManager)
 		return fileManager.contents(atPath: cacheURL.path)

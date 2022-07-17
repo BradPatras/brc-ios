@@ -50,8 +50,17 @@ public class BasicRemoteConfigs {
 		self.requestHelper = requestHelper
 	}
 
+	/// Fetch configs from either the local cache or the remote url
+	/// url provided in the class initializer.  Locally cached configs will be
+	/// used if they exist and are not expired. Remote configs will be fetched
+	/// otherwise or if `ignoreCache` is `true`.
+	/// If configs are fetched successfully and contain a **version** value
+	/// different from what is currently stored, the new configs will be assigned to the
+	/// **values** class property.
+	///
+	/// - Parameter ignoreCache: If `true`, ignore the local cache and set new configs from
 	public func fetchConfigs(ignoreCache: Bool = false) async throws {
-		if cacheHelper.isCacheValid(expirationHours: cacheExpirationHours) {
+		if !ignoreCache, cacheHelper.isCacheValid(expirationHours: cacheExpirationHours) {
 			try fetchLocalConfigs()
 		} else {
 			do {
@@ -60,6 +69,16 @@ public class BasicRemoteConfigs {
 				try fetchLocalConfigs()
 			}
 		}
+	}
+
+	/// Clear the locally cached configs, if any exist. The next call
+	/// made to `fetchConfigs()` will be guaranteed to pull configs
+	/// from the remoteURL.
+	public func clearCachedConfigs() {
+		try? cacheHelper.deleteCache()
+		version = noneVersion
+		fetchDate = nil
+		values = [:]
 	}
 	
 	private func fetchLocalConfigs() throws {

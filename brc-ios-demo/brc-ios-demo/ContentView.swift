@@ -19,7 +19,9 @@ struct ContentView: View {
 			Text(text)
 				.padding()
 				.font(.caption)
-			
+
+			Spacer()
+
 			Button(action: {
 				text = "Fetching configs..."
 				
@@ -33,6 +35,16 @@ struct ContentView: View {
 				}
 			}) {
 				Text("Fetch configs")
+			}
+			
+			Spacer()
+
+			Button(action: {
+				text = "Hello, world!"
+				
+				brc.clearCachedConfigs()
+			}) {
+				Text("Clear configs")
 			}
 			
 			Spacer()
