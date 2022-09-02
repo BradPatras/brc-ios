@@ -39,7 +39,7 @@ brc.fetchConfigs(ignoreCache: Boolean)
 ```
 
 ## Error handling
-The call to `.fetchConfigs()` may make a network request and do some deserialization, so it's bound to fail at some point. BasicRemoteConfigs will print errors under the key "BasicRemoteConfigs" using `Log.e` with a hint as to where the error happened in regards to fetching configs. It won't do any handling or masking of the exceptions so you need to wrap it in a try/catch or use a CoroutineExceptionHandler yourself.
+The call to `.fetchConfigs()` may make a network request and do some deserialization, so it's bound to fail at some point. It won't do any handling or masking of the exceptions so you need to wrap it in a do/catch and handle it yourself.
 ```swift
 do {
     try await brc.fetchConfigs()
