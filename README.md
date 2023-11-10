@@ -35,7 +35,7 @@ Configs are stored locally in the app's private storage once they've been fetche
 
 If you'd like to bypass the cached version and fetch the latest configs from the network, there's an optional param available.
 ```swift
-brc.fetchConfigs(ignoreCache: Boolean)
+brc.fetchConfigs(ignoreCache: Bool)
 ```
 
 ## Error handling
